@@ -23,10 +23,10 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://summa-plus.bitrix24.ru/rest/38/e01r9eqwteajj084/crm.company.list",
+        "url": "https://bitrix24.ru/crm.company.list",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"filter\": {\n    \"UF_CRM_1779706535\": {{ $json.targetBitrixId }}\n  },\n  \"select\": [\n    \"ID\",\n    \"TITLE\",\n    \"ASSIGNED_BY_ID\"\n  ]\n}\n",
+        "jsonBody": "={\n  \"filter\": {\n    \""your-field-id"\": {{ $json.targetBitrixId }}\n  },\n  \"select\": [\n    \"ID\",\n    \"TITLE\",\n    \"ASSIGNED_BY_ID\"\n  ]\n}\n",
         "options": {}
       },
       "id": "bcc94071-07ee-484e-9506-8a1a4a5d2236",
@@ -41,10 +41,10 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://summa-plus.bitrix24.ru/rest/38/e01r9eqwteajj084/im.message.add",
+        "url": "https://bitrix24.ru/im.message.add",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"DIALOG_ID\": \"{{ $json.result[0].ASSIGNED_BY_ID }}\",\n  \"MESSAGE\": \"📢 Напоминание: Завтра плановая отгрузка у компании [B]{{ $json.result[0].TITLE }}[/B]. \\n🔗 Ссылка на компанию: https://summa-plus.bitrix24.ru/crm/company/details/{{ $json.result[0].ID }}/\"\n}\n",
+        "jsonBody": "={\n  \"DIALOG_ID\": \"{{ $json.result[0].ASSIGNED_BY_ID }}\",\n  \"MESSAGE\": \"📢 Напоминание: Завтра плановая отгрузка у компании [B]{{ $json.result[0].TITLE }}[/B]. \\n🔗 Ссылка на компанию: https://bitrix24.ru/crm/company/details/{{ $json.result[0].ID }}/\"\n}\n",
         "options": {}
       },
       "id": "f5b749ad-33c6-4ca6-b23b-d9fbfd0927cb",
@@ -58,7 +58,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// 1. Определяем завтрашний день недели\nconst tomorrow = new Date();\ntomorrow.setDate(tomorrow.getDate() + 1);\nconst tomorrowDayNumber = tomorrow.getDay(); // 0 - Вс, 1 - Пн, 2 - Вт...\n\n// 2. Соответствие дней недели и ID из Битрикс24\nconst bitrixDaysMap = {\n    1: \"358\", // Понедельник\n    2: \"360\", // Вторник\n    3: \"362\", // Среда\n    4: \"364\", // Четверг\n    5: \"366\", // Пятница\n    6: \"368\", // Суббота\n    0: \"0\"    // Воскресенье (игнорируем)\n};\n\nconst targetId = bitrixDaysMap[tomorrowDayNumber];\n\nreturn [{ json: { targetBitrixId: targetId } }];\n"
+        "jsCode": "// 1. Определяем завтрашний день недели\nconst tomorrow = new Date();\ntomorrow.setDate(tomorrow.getDate() + 1);\nconst tomorrowDayNumber = tomorrow.getDay(); // 0 - Вс, 1 - Пн, 2 - Вт...\n\n// 2. Соответствие дней недели и ID из Битрикс24\nconst bitrixDaysMap = {\n    1: \""your-field-id"\", // Понедельник\n    2: \""your-field-id"\", // Вторник\n    3: \""your-field-id"\", // Среда\n    4: \""your-field-id"\", // Четверг\n    5: \""your-field-id"\", // Пятница\n    6: \""your-field-id"\", // Суббота\n    0: \"0\"    // Воскресенье (игнорируем)\n};\n\nconst targetId = bitrixDaysMap[tomorrowDayNumber];\n\nreturn [{ json: { targetBitrixId: targetId } }];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
