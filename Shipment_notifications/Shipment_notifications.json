@@ -1,0 +1,120 @@
+{
+  "name": "Shipment_notifications",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "08db29b9-8876-4375-a6a5-e1f7593b60ff",
+      "name": "Каждый день в 09:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -144,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://summa-plus.bitrix24.ru/rest/38/e01r9eqwteajj084/crm.company.list",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"filter\": {\n    \"UF_CRM_1779706535\": {{ $json.targetBitrixId }}\n  },\n  \"select\": [\n    \"ID\",\n    \"TITLE\",\n    \"ASSIGNED_BY_ID\"\n  ]\n}\n",
+        "options": {}
+      },
+      "id": "bcc94071-07ee-484e-9506-8a1a4a5d2236",
+      "name": "Получаем Компании",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        304,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://summa-plus.bitrix24.ru/rest/38/e01r9eqwteajj084/im.message.add",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"DIALOG_ID\": \"{{ $json.result[0].ASSIGNED_BY_ID }}\",\n  \"MESSAGE\": \"📢 Напоминание: Завтра плановая отгрузка у компании [B]{{ $json.result[0].TITLE }}[/B]. \\n🔗 Ссылка на компанию: https://summa-plus.bitrix24.ru/crm/company/details/{{ $json.result[0].ID }}/\"\n}\n",
+        "options": {}
+      },
+      "id": "f5b749ad-33c6-4ca6-b23b-d9fbfd0927cb",
+      "name": "Отправляем уведомление",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Определяем завтрашний день недели\nconst tomorrow = new Date();\ntomorrow.setDate(tomorrow.getDate() + 1);\nconst tomorrowDayNumber = tomorrow.getDay(); // 0 - Вс, 1 - Пн, 2 - Вт...\n\n// 2. Соответствие дней недели и ID из Битрикс24\nconst bitrixDaysMap = {\n    1: \"358\", // Понедельник\n    2: \"360\", // Вторник\n    3: \"362\", // Среда\n    4: \"364\", // Четверг\n    5: \"366\", // Пятница\n    6: \"368\", // Суббота\n    0: \"0\"    // Воскресенье (игнорируем)\n};\n\nconst targetId = bitrixDaysMap[tomorrowDayNumber];\n\nreturn [{ json: { targetBitrixId: targetId } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        64,
+        32
+      ],
+      "id": "5460a922-39f3-40b0-bbe2-14a11ad54aa2",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Получаем Компании": {
+      "main": [
+        [
+          {
+            "node": "Отправляем уведомление",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Каждый день в 09:00": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Получаем Компании",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3d0e62f3-14eb-4791-a700-93230bab3261",
+  "meta": {
+    "instanceId": "1e3a5fde7a39c3df5f932e2fb5d7254c6a8cc863b9372a31589e7eaef7ae5c32"
+  },
+  "id": "MRna1R7WASE4IqnI",
+  "tags": []
+}
