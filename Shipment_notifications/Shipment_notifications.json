@@ -4,7 +4,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://summa-plus.bitrix24.ru/crm.company.list",
+        "url": "https://bitrix24.ru/crm.company.list",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"filter\": {\n    \"UF_CRM_1779706535\": {{ $json.targetBitrixId }}\n  },\n  \"select\": [\n    \"ID\",\n    \"TITLE\",\n    \"ASSIGNED_BY_ID\"\n  ]\n}\n",
@@ -22,7 +22,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://summa-plus.bitrix24.ru/im.message.add",
+        "url": "https://bitrix24.ru/im.message.add",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"DIALOG_ID\": \"{{ $('Получаем Компании').first().json.result[0].ASSIGNED_BY_ID }}\",\n  \"MESSAGE\": \"📢 Напоминание: Завтра плановая отгрузка у компании [B]{{ $('Получаем Компании').first().json.result[0].TITLE }}[/B]. \\n🔗 Ссылка на компанию: https://bitrix24.ru{{ $('Получаем Компании').first().json.result[0].ID }}/\"\n}\n",
@@ -72,7 +72,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://summa-plus.bitrix24.ru/user.get",
+        "url": "https://bitrix24.ru/user.get",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"filter\": {\n    \"ID\": \"{{ $json.result[0].ASSIGNED_BY_ID }}\"\n  }\n}\n",
@@ -89,7 +89,7 @@
     },
     {
       "parameters": {
-        "fromEmail": "i.volochkova@summa-plus.com",
+        "fromEmail": "YOUR EMAIL",
         "toEmail": "={{ $node['Получаем Email'].json.result[0].EMAIL }}",
         "subject": "Напоминание об отгрузке",
         "html": "=📢 Напоминание: Завтра плановая отгрузка у компании <b>{{ $('Получаем Компании').item.json.result[0].TITLE }}</b>.\n<br><br>\n🔗 Ссылка на компанию: <a href=\"https://bitrix24.ru/crm/company/details/{{ $('Получаем Компании').item.json.result[0].ID }}/\">Открыть карточку компании</a>\n",
@@ -103,10 +103,10 @@
       ],
       "id": "c603075e-6434-4e40-9683-ea14712b8e6f",
       "name": "Отправляем Email",
-      "webhookId": "01b12585-6a51-4f5a-a7be-23af431106d0",
+      "webhookId": "YOUR WEBHOOKID",
       "credentials": {
         "smtp": {
-          "id": "mpNNgSj5n5Wfk65C",
+          "id": "YOUR ID",
           "name": "SMTP account"
         }
       }
