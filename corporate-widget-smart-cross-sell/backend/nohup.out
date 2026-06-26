@@ -1,0 +1,60 @@
+INFO:     Started server process [2981]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8082 (Press CTRL+C to quit)
+WARNING:  Invalid HTTP request received.
+INFO:     152.32.141.154:53648 - "GET / HTTP/1.1" 404 Not Found
+INFO:     152.32.141.154:43480 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     152.32.141.154:43492 - "GET /robots.txt HTTP/1.1" 404 Not Found
+INFO:     152.32.141.154:43506 - "GET /sitemap.xml HTTP/1.1" 404 Not Found
+INFO:     152.32.141.154:43516 - "GET /sse HTTP/1.1" 404 Not Found
+INFO:     152.32.141.154:43524 - "GET /mcp HTTP/1.1" 404 Not Found
+INFO:     152.32.141.154:43540 - "GET /mcp-sse HTTP/1.1" 404 Not Found
+INFO:     152.32.141.154:43552 - "GET /get_server_info HTTP/1.1" 404 Not Found
+INFO:     194.164.107.4:49532 - "GET / HTTP/1.1" 404 Not Found
+INFO:     194.164.107.4:58984 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     194.58.95.53:55906 - "POST /api/v1/calls HTTP/1.1" 404 Not Found
+INFO:     194.58.95.53:37252 - "POST /api/v1/calls HTTP/1.1" 404 Not Found
+INFO:     194.58.95.53:50930 - "POST /api/v1/call-event HTTP/1.1" 422 Unprocessable Entity
+INFO:     194.58.95.53:45758 - "POST /api/v1/call-event HTTP/1.1" 422 Unprocessable Entity
+INFO:     194.58.95.53:41292 - "POST /api/v1/call-event HTTP/1.1" 200 OK
+INFO:     194.58.95.53:59826 - "POST /api/v1/call-event HTTP/1.1" 200 OK
+INFO:     193.176.31.237:60190 - "GET / HTTP/1.1" 404 Not Found
+INFO:     193.176.31.222:2192 - "GET / HTTP/1.1" 404 Not Found
+INFO:     185.223.235.42:10104 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     89.21.67.186:7534 - "POST / HTTP/1.1" 404 Not Found
+INFO:     81.19.216.81:10778 - "GET /sse HTTP/1.1" 404 Not Found
+WARNING:  Invalid HTTP request received.
+INFO:     195.184.76.192:55375 - "GET / HTTP/1.1" 404 Not Found
+INFO:     195.184.76.236:57865 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     5.61.209.92:22866 - "GET /SDK/webLanguage HTTP/1.1" 404 Not Found
+WARNING:  Invalid HTTP request received.
+INFO:     47.91.79.97:37964 - "GET / HTTP/1.1" 404 Not Found
+INFO:     47.91.79.97:34480 - "GET / HTTP/1.1" 404 Not Found
+WARNING:  Invalid HTTP request received.
+INFO:     80.94.92.130:36038 - "CONNECT 104.16.185.241%3A443 HTTP/1.1" 404 Not Found
+WARNING:  Invalid HTTP request received.
+WARNING:  Invalid HTTP request received.
+WARNING:  Invalid HTTP request received.
+INFO:     3.130.168.2:50988 - "GET / HTTP/1.1" 404 Not Found
+INFO:     3.130.168.2:42016 - "GET / HTTP/1.1" 404 Not Found
+WARNING:  Invalid HTTP request received.
+WARNING:  Invalid HTTP request received.
+INFO:     Started server process [48826]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8082 (Press CTRL+C to quit)
+
+=== ВХОДЯЩИЙ ВЕБХУК ОТ N8N ===
+ID менеджера: 20
+Имя менеджера: Олег Карпов
+Компания: ТОРА ООО
+Статус Б24: Действующий
+Просадки ассортимента: []
+==============================
+
+INFO:     194.58.95.53:33166 - "POST /api/v1/call-event HTTP/1.1" 200 OK
+WARNING:  Invalid HTTP request received.
+INFO:     46.242.10.193:4093 - "WebSocket /ws/16" [accepted]
+INFO:     connection open
+INFO:     connection closed

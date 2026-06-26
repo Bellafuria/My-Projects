@@ -1,0 +1,307 @@
+{
+  "name": "Corporate Widget: Smart Cross-Sell",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// 1. Функция очистки наименования компании для сравнения\nfunction cleanCompanyName(name) {\n    if (!name) return '';\n    return name\n        .toLowerCase()\n        .replace(/[\"'«»“”]/g, '')\n        .replace(/\\b(ооо|ип|зао|ао|хлдинг|комбинат|клиент)\\b/g, '')\n        .replace(/\\s+/g, ' ')\n        .trim();\n}\n\n// 2. Сбор данных из предыдущих нод\nconst b24Company = $('HTTP Request 2_crm.company.get').item.json.result;\nconst b24User = $('HTTP Request 3_user.get').item.json.result[0] || {};\n\nconst b24Title = b24Company.TITLE;\nconst assignedManager = b24Company.ASSIGNED_BY_ID;\nconst rawStatus = b24Company.UF_CRM_1774952923; // Сюда падает число 312\n\n// --- РАСКОДИРОВКА СТАТУСА КЛАССИФИКАЦИИ ---\n// Сопоставляем ID списков Битрикс24 с реальными словами\nconst statusDictionary = {\n    \"312\": \"Действующий\",\n    \"314\": \"Новый\",\n    \"318\": \"Отложен\",\n    \"316\": \"Архив\"\n    // Если у вас другие ID для Нового/Архива, мы их поправим по логам, пока ставим дефолт\n};\nconst companyStatus = statusDictionary[rawStatus] || \"Действующий\";\n\n// --- СКЛЕИВАНИЕ ИМЕНИ МЕНЕДЖЕРА ---\n// Берем NAME и LAST_NAME из user.get и объединяем через пробел\nconst managerFirstName = b24User.NAME || \"\";\nconst managerLastName = b24User.LAST_NAME || \"\";\nconst managerName = `${managerFirstName} ${managerLastName}`.trim() || `Менеджер ID ${assignedManager}`;\n\nconst cleanB24Title = cleanCompanyName(b24Title);\n\n// 3. Загружаем утренний кэш «красных ячеек» из статической памяти\nconst staticData = $getWorkflowStaticData('global');\nconst matrix1C = staticData.matrix1C || {};\n\nlet redCells = [];\n\n// 4. Поиск компании в кэше 1С\nfor (const managerNameKey in matrix1C) {\n    const clients = matrix1C[managerNameKey];\n    for (const clientName in clients) {\n        if (cleanCompanyName(clientName) === cleanB24Title) {\n            redCells = clients[clientName].map(item => item.productName);\n            break;\n        }\n    }\n    if (redCells.length > 0) break;\n}\n\n// 5. Возвращаем чистый JSON для FastAPI\nreturn [{\n    json: {\n        manager_id: assignedManager,\n        manager_name: managerName,     // Склеенная строка \"Имя Фамилия\"\n        company_name: b24Title, \n        company_status: companyStatus, // Понятное слово \"Действующий\"\n        red_cells: redCells \n    }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1056,
+        0
+      ],
+      "id": "d437edcf-cda6-42cd-bb54-9fdd7ca92959",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "megafon-incoming",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -256,
+        16
+      ],
+      "id": "76f080cc-0012-4442-89be-a156eb207116",
+      "name": "Webhook",
+      "webhookId": "f18f6d28-cf36-42d2-9d4f-854bd7167fb1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://summa-plus.bitrix24.ru/rest/38/mpaqbud2gd83126x/crm.contact.list",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "filter[PHONE]",
+              "value": "={{ $json.body['data[CALLER_ID]'] }}"
+            },
+            {
+              "name": "select[0]",
+              "value": "ID"
+            },
+            {
+              "name": "select[1]",
+              "value": "COMPANY_ID"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        192,
+        0
+      ],
+      "id": "834a9b16-f12c-4a43-8544-eee715b83281",
+      "name": "HTTP Request_crm.contact.list"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://summa-plus.bitrix24.ru/rest/38/mpaqbud2gd83126x/crm.contact.list",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "filter[PHONE]",
+              "value": "={{ $('If').item.json.body['data[CALLER_ID]'] }}"
+            },
+            {
+              "name": "select",
+              "value": "ID"
+            },
+            {
+              "name": "select",
+              "value": "COMPANY_ID"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "9f8b2185-7e07-4847-9482-8504de993d0d",
+      "name": "HTTP Request 1_crm.contact.list"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://summa-plus.bitrix24.ru/rest/38/mpaqbud2gd83126x/crm.company.get",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"id\": \"{{ $json.result[0]['COMPANY_ID'] }}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        608,
+        0
+      ],
+      "id": "e76d7772-f8b3-4dfe-8663-a06bf520350e",
+      "name": "HTTP Request 2_crm.company.get"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://194.58.95.53:8082/api/v1/call-event",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "super_secret_n8n_token_2026"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "manager_id",
+              "value": "={{ $json.manager_id }}"
+            },
+            {
+              "name": "company_name",
+              "value": "={{ $json.company_name }}"
+            },
+            {
+              "name": "red_cells",
+              "value": "={{ $json.red_cells }}"
+            },
+            {
+              "name": "company_status",
+              "value": "={{ $json.company_status }}"
+            },
+            {
+              "name": "manager_name",
+              "value": "={{ $json.manager_name }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1280,
+        0
+      ],
+      "id": "e88a9041-b105-4a50-9e65-85ee968c1ef3",
+      "name": "HTTP Request 4_call-event"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://summa-plus.bitrix24.ru/rest/38/mpaqbud2gd83126x/user.get",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"ID\": \"{{ $('HTTP Request 2_crm.company.get').item.json.result.ASSIGNED_BY_ID }}\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        832,
+        0
+      ],
+      "id": "8583dca7-d002-43b8-aa56-ec7c769ebd94",
+      "name": "HTTP Request 3_user.get"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "38885ab4-6d96-4c33-a4e6-bb6b4e1673c6",
+              "leftValue": "={{ $json.body.event }}",
+              "rightValue": "ONVOXIMPLANTCALLINIT",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -32,
+        16
+      ],
+      "id": "6833a4ec-a91c-4aa1-aeb7-350921551325",
+      "name": "If"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request 4_call-event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request_crm.contact.list": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request 1_crm.contact.list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request 1_crm.contact.list": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request 2_crm.company.get",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request 2_crm.company.get": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request 3_user.get",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request 3_user.get": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request_crm.contact.list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "bb5a484a-e983-4055-8534-35095b67602f",
+  "meta": {
+    "instanceId": "1e3a5fde7a39c3df5f932e2fb5d7254c6a8cc863b9372a31589e7eaef7ae5c32"
+  },
+  "id": "mVVQwRBudg3fqYQH",
+  "tags": []
+}
