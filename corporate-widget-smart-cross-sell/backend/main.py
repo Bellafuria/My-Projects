@@ -6,7 +6,7 @@ from typing import Dict, Optional, List
 # Новое название проекта
 app = FastAPI(title="Corporate Widget Backend")
 
-N8N_API_KEY = "super_secret_n8n_token_2026"
+N8N_API_KEY = "youself_APY_KEY"
 
 class CallPayload(BaseModel):
     manager_id: str          
@@ -61,7 +61,7 @@ async def websocket_endpoint(websocket: WebSocket, manager_id: str):
 async def handle_call_event(payload: CallPayload):
     event_data = payload.model_dump()
     
-    # ЛОГИРОВАНИЕ ДЛЯ ШАГА 1: Выводим в консоль VPS всё, что реально прилетело от n8n
+    # ЛОГИРОВАНИЕ ДЛЯ ШАГА 1: Выводим в консоль VPS всё от n8n
     print("\n=== ВХОДЯЩИЙ ВЕБХУК ОТ N8N ===")
     print(f"ID менеджера: {payload.manager_id}")
     print(f"Имя менеджера: {payload.manager_name}")

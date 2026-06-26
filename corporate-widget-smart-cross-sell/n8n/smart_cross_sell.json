@@ -33,7 +33,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://summa-plus.bitrix24.ru/rest/38/mpaqbud2gd83126x/crm.contact.list",
+        "url": "https://bitrix24.ru/crm.contact.list",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -65,7 +65,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://summa-plus.bitrix24.ru/rest/38/mpaqbud2gd83126x/crm.contact.list",
+        "url": "https://bitrix24.ru/crm.contact.list",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -97,7 +97,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://summa-plus.bitrix24.ru/rest/38/mpaqbud2gd83126x/crm.company.get",
+        "url": "https://bitrix24.ru/crm.company.get",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"id\": \"{{ $json.result[0]['COMPANY_ID'] }}\"\n}\n",
@@ -164,7 +164,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://summa-plus.bitrix24.ru/rest/38/mpaqbud2gd83126x/user.get",
+        "url": "https://bitrix24.ru/user.get",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\"ID\": \"{{ $('HTTP Request 2_crm.company.get').item.json.result.ASSIGNED_BY_ID }}\"}",
