@@ -6,7 +6,7 @@ from typing import Dict, Optional, List
 # Новое название проекта
 app = FastAPI(title="Corporate Widget Backend")
 
-N8N_API_KEY = "super_secret_n8n_token_2026"
+N8N_API_KEY = "YOUR_SAFE_API_KEY"
 
 # КЭШ В ОПЕРАТИВНОЙ ПАМЯТИ ДЛЯ МАТРИЦЫ 1С
 cached_matrix_1c: Dict[str, Dict[str, List[dict]]] = {}
@@ -125,7 +125,7 @@ async def handle_call_event(payload: CallPayload):
     print(f"ID менеджера: {payload.manager_id}")
     print(f"Имя менеджера: {payload.manager_name}")
     print(f"Компания: {payload.company_name} (Поиск по: '{search_title}')")
-    print(f"Статус Б24: {payload.company_status}")
+    print(f"Статус CRM: {payload.company_status}")
     print(f"Найдено просадок на бэкенде: {len(red_cells)}")
     print("==============================\n")
 
