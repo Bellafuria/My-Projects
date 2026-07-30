@@ -13,6 +13,12 @@ from PyQt6.QtGui import QColor, QFont, QIcon
 CONFIG_FILE = "config.json"
 
 def get_manager_id():
+    global app
+    app = QApplication.instance()
+    if not app:
+        app = QApplication(sys.argv)
+    app.setQuitOnLastWindowClosed(False)
+
     if os.path.exists(CONFIG_FILE):
         try:
             with open(CONFIG_FILE, "r", encoding="utf-8") as f:
@@ -23,13 +29,9 @@ def get_manager_id():
         except Exception:
             pass
 
-    app = QApplication.instance()
-    if not app:
-        app = QApplication(sys.argv)
-
     text, ok = QInputDialog.getText(
-        None, 
-        "Авторизация виджета", 
+        None,
+        "Авторизация виджета",
         "Введите ваш ID менеджера из Битрикс24:"
     )
 
@@ -47,6 +49,7 @@ def get_manager_id():
 
 class WebSocketWorker(QThread):
     call_received = pyqtSignal(dict)
+    hide_requested = pyqtSignal()
 
     def __init__(self, manager_id):
         super().__init__()
@@ -64,25 +67,55 @@ class WebSocketWorker(QThread):
         uri = f"ws://194.58.95.53:8082/ws/{self.manager_id}"
         while self.running:
             try:
-                async with websockets.connect(uri) as websocket:
+                # Отправляем пинги каждые 10 секунд. Если ответа нет 10 секунд — связь разорвана.
+                async with websockets.connect(
+                    uri, 
+                    ping_interval=10, 
+                    ping_timeout=10
+                ) as websocket:
                     self.websocket = websocket
                     print(f"[WebSocket] Подключено к серверу для менеджера {self.manager_id}")
+                    
+                    # Логируем успешный коннект в файл на ПК менеджера
+                    try:
+                        with open("websocket_errors.txt", "a", encoding="utf-8") as f:
+                            f.write(f"[WebSocket] Успешное подключение для менеджера {self.manager_id}\n")
+                    except Exception:
+                        pass
+                    
                     while self.running:
                         try:
-                            message = await asyncio.wait_for(websocket.recv(), timeout=1.0)
+                            # Жесткий таймаут на чтение (15 сек), чтобы не зависнуть при смене сети
+                            message = await asyncio.wait_for(websocket.recv(), timeout=15)
+                            
                             data = json.loads(message)
+                            if data.get("action") == "hide_widget" or data.get("company_name") == "Закрытие окна":
+                                self.hide_requested.emit()
+                                continue
                             self.call_received.emit(data)
                         except asyncio.TimeoutError:
-                            continue 
-                        except json.JSONDecodeError:
-                            print("[WebSocket] Ошибка JSON")
+                            # Тайм-аут чтения. Если сеть жива — пинги удержат связь. Если сменилась — код пойдет дальше.
+                            continue
+                        except websockets.exceptions.ConnectionClosed:
+                            print("[WebSocket] Соединение закрыто сервером. Переподключение...")
+                            break
+
             except Exception as e:
                 if self.running:
-                    print(f"[WebSocket] Ошибка сети: {e}. Повтор через 5 сек...")
+                    error_msg = f"[WebSocket] Ошибка сети или разрыв связи: {str(e)}\n"
+                    print(error_msg.strip())
                     try:
+                        with open("websocket_errors.txt", "a", encoding="utf-8") as f:
+                            f.write(error_msg)
+                    except Exception:
+                        pass
+                    
+                    try:
+                        # Пауза 5 секунд перед следующей попыткой найти Wi-Fi сеть
                         await asyncio.sleep(5)
                     except asyncio.CancelledError:
                         break
+        
 
     def stop(self):
         self.running = False
@@ -103,6 +136,7 @@ class SummaPlusWidget(QWidget):
         
         self.worker = WebSocketWorker(self.manager_id)
         self.worker.call_received.connect(self.update_widget_data)
+        self.worker.hide_requested.connect(self.hide)
         self.worker.start()
     
     def init_ui(self):
@@ -134,7 +168,7 @@ class SummaPlusWidget(QWidget):
         header_layout = QHBoxLayout(header)
         header_layout.setContentsMargins(20, 0, 20, 0)
         
-        status_label = QLabel("📞 ВХОДЯЩИЙ ЗВОНОК")
+        status_label = QLabel("📞 ЗВОНОК")
         status_label.setObjectName("StatusLabel")
         
         close_btn = QPushButton("✕")
@@ -335,14 +369,20 @@ class SummaPlusWidget(QWidget):
         self.activateWindow()
 
     def closeEvent(self, event):
-        print("[Widget] Закрытие приложения. Остановка WebSocket-потока...")
-        self.worker.stop()
-        event.accept()
+        # Игнорируем стандартное закрытие (уничтожение) окна
+        event.ignore()  
+        # Просто скрываем виджет с экрана менеджера
+        self.hide()     
+        print("[Widget] Окно скрыто. Фоновый WebSocket-поток продолжает ожидать звонки...")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    
+    # 1. Получаем ID менеджера
     current_manager_id = get_manager_id()
+    
+    # 2. Создаем экземпляр виджета (он создается скрытым в памяти)
     widget = SummaPlusWidget(manager_id=current_manager_id)
-    widget.show()
+    
+    # 3. Запускаем цикл обработки событий (приложение работает в фоне)
     sys.exit(app.exec())
-
