@@ -12,6 +12,8 @@
 | **📈 Shipment_notifications** | Автоматические уведомления клиентов о графиках отгрузок. | n8n, Bitrix24 REST API, Email (SMTP/IMAP) |
 | **🔗 connect-contact-company** | Автоматическая привязка Контакта к Компании при закрытии Лида. | n8n, Bitrix24 REST API, JSON |
 | **🌤 weather-app** | Приложение для получения текущей погоды по названию города. | Python, Requests, Open-Meteo API, Geocoding API |
+| **📞 corporate-widget-smart-cross-sell** | Автономный десктоп-виджет: при входящем звонке мгновенно показывает менеджеру просадку ассортимента («красные ячейки») на основе аналитики 1С. | n8n, FastAPI + WebSockets, Python, PyQt6 | 
+| **🔗 dependent-fields** | Автоматическое управление зависимыми полями в карточке CRM (показ/очистка «Пармезан» в зависимости от «Товарных групп»). | n8n, JavaScript, Bitrix24 REST API |
 
 ---
 
@@ -53,5 +55,26 @@
   python -m pip install requests
   python main.py
   ```
+### 5. Corporate Widget: Smart Cross-Sell (`corporate-widget-smart-cross-sell`)
+Автономный десктоп-виджет для менеджеров отдела продаж. При входящем корпоративном звонке мгновенно всплывает поверх всех окон и показывает «красные ячейки» (просадку ассортимента) на основе ежедневной аналитики отчётов 1С. Работает через n8n + FastAPI/WebSockets + PyQt6-клиент.
+
+* **Как запустить:**
+  ```bash
+  cd corporate-widget-smart-cross-sell
+  python -m venv venv && source venv/bin/activate
+  pip install -r requirements.txt
+  ```
+ 1. Импортируйте два воркфлоу из папки n8n/ в n8n и настройте credentials. 
+ 2. Запустите бэкенд: cd backend && nohup python main.py & (порт 8082).
+ 3. Соберите виджет: cd widget && pyinstaller --noconsole --onefile widget.py → перенесите .exe на ПК менеджеров (при первом запуске укажите ID сотрудника).
+
+### 6. Dependent Fields (`dependent-fields`)
+Сценарий n8n, который автоматически показывает/скрывает и очищает зависимые поля в карточке компании Битрикс24. 
+Пример: при выборе «Твёрдые сыры» в «Товарных группах» появляется поле «Пармезан»; при снятии галочки — поле очищается и скрывается.
+
+* **Как запустить:**
+ 1. Импортируйте dependent_fields_workflow.json в n8n,
+ 2. настройте исходящий вебхук CRM на событие обновления компании и credentials,
+ 3. Активируйте воркфлоу.
 
 ---
