@@ -1,0 +1,676 @@
+{
+  "name": "Mail sorter",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "customEmailConfig": "[\"UNSEEN\"]",
+          "forceReconnect": 5
+        }
+      },
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2.1,
+      "position": [
+        -32,
+        -272
+      ],
+      "id": "a3373fa5-b98a-4043-9874-89bcdc5d7023",
+      "name": "Email Trigger (IMAP)",
+      "credentials": {
+        "imap": {
+          "id": "3N8caDIbuOwVIzZR",
+          "name": "IMAP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "977fb4c4-778d-4fdd-a5d8-bfed1f4ade51",
+              "name": "from",
+              "value": "={{ $json.from || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "8394d39e-3ba5-41af-897d-0fc02ed12ad9",
+              "name": "fromName",
+              "value": "={{ ($json.from || '').replace(/<.*?>/g, '').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "b75e2122-c021-40d7-a6ff-a33b95c438d8",
+              "name": "fromEmail",
+              "value": "={{ ($json.from || '').match(/<(.+?)>/)?.[1] || ($json.from || '') }}",
+              "type": "string"
+            },
+            {
+              "id": "e84727ae-63fa-44cc-b4dd-7fc25e1d620a",
+              "name": "subject",
+              "value": "={{ $json.subject || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "68f9c3ec-9475-48d0-8236-49fc55ecba2d",
+              "name": "text",
+              "value": "={{ $json.textPlain || $json.text || $json.textHtml || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "4807c4b9-61c4-413b-bd5c-8120d10e204b",
+              "name": "date",
+              "value": "={{ $json.date || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": false
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        192,
+        -272
+      ],
+      "id": "ede58775-13b0-4176-8063-8c756ee0799b",
+      "name": "Set"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "84cd69e6-92fd-4a12-a61e-2e4191d924f6",
+              "leftValue": "={{ $json.fromEmail }}",
+              "rightValue": "o.shokareva@summa-plus.com",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "97060475-bc97-43c5-a3b5-e6bc09ee73b5",
+              "leftValue": "={{ $json.fromEmail }}",
+              "rightValue": "zakaz.summa-plus@yandex.ru",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        -272
+      ],
+      "id": "3b0f4940-9595-457e-b35c-6a1b000a5a71",
+      "name": "IF - Руководители"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "973fd04c-f5dc-4db0-959d-aa0637642dff",
+              "leftValue": "={{ $json.from }}",
+              "rightValue": "@summa-plus.com",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        752,
+        112
+      ],
+      "id": "fa19ad00-7460-4766-bee3-197befa96029",
+      "name": "IF - Коллеги"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fdf5390d-cb6a-43c9-bb14-bc3d16657d81",
+              "leftValue": "={{ $json.fromEmail }}",
+              "rightValue": "i.volochkova@summa-plus.com",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "efc72c0a-afec-4103-91e1-c328238792a6",
+              "leftValue": "={{ $json.subject }}",
+              "rightValue": "Новый Лид в CRM",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        592,
+        -80
+      ],
+      "id": "f4c606d1-a859-49e9-ba30-dd036a902e5b",
+      "name": "IF - Новый Лид в CRM!"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "87e01def-875f-4cb2-8036-2a0d96b5b78e",
+              "leftValue": "={{ $json.fromName }}",
+              "rightValue": "Mail.ru Календарь",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        992,
+        288
+      ],
+      "id": "24e61af2-bc8e-4521-91a2-042d497883c1",
+      "name": "IF - Mail.ru Календарь"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "854eafa1-e8c0-4c9f-b136-d9c8c2542501",
+              "name": "userPrompt",
+              "value": "=Отправитель: {{ $json.fromEmail }} Имя: {{ $json.fromName }} Тема: {{ $json.subject }} Текст: {{ ($json.text || '').replace(/[\\n\\r\\t]/g, ' ').substring(0, 2500) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1232,
+        464
+      ],
+      "id": "a1d03c09-0d48-4718-8b2c-c2b07a9ffd3b",
+      "name": "Prepare Prompt"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"mistral-small-latest\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Ты классификатор корпоративной почты. Отвечай ТОЛЬКО одним словом в нижнем регистре: spam или unknown. spam — реклама, рассылки, уведомления сервисов, нерелевантные предложения. unknown — реальные письма от людей, запросы, коммерческие предложения. Никаких объяснений и знаков препинания.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.userPrompt }}\"\n    }\n  ],\n  \"temperature\": 0.1,\n  \"max_tokens\": 10\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1424,
+        464
+      ],
+      "id": "d333af10-938c-452d-beb8-22c432388010",
+      "name": "Mistral AI",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DbLsNUpQ3UyMFGwr",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ca953d2f-4d2b-4545-8069-c97982fa170c",
+              "leftValue": "={{ $json.choices[0].message.content }}",
+              "rightValue": "unknown",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1600,
+        464
+      ],
+      "id": "08d3ce56-65ac-4333-8bca-72592bb762c1",
+      "name": "IF - Результат Mistral"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const subject = $json.subject || '';\nconst text = $json.text || '';\n\n// ID лида\nconst idMatch = subject.match(/ID:\\s*(\\d+)/i) || text.match(/lead\\/details\\/(\\d+)/i);\nconst leadId = idMatch ? idMatch[1] : '';\n\n// Ответственный\nconst responsibleMatch = text.match(/Ответственный:\\s*([^\\n\\r]+)/i);\nconst responsible = responsibleMatch ? responsibleMatch[1].trim() : '';\n\n// Ссылка\nconst linkMatch = text.match(/https:\\/\\/summa-plus\\.bitrix24\\.ru\\/crm\\/lead\\/details\\/\\d+/i);\nconst link = linkMatch ? linkMatch[0] : '';\n\nreturn {\n  json: {\n    date: $json.date || '',\n    leadId: leadId,\n    responsible: responsible,\n    link: link,\n    subject: subject\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        992,
+        -96
+      ],
+      "id": "7a3721a9-9c8a-4d43-a215-d53b22a501ee",
+      "name": "Извлечение данных из Лида"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1ZNnG2aXaVap_eAYCbRZZxN28OSvd5eIkLjxe8WN8f6g",
+          "mode": "list",
+          "cachedResultName": "Новые лиды CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZNnG2aXaVap_eAYCbRZZxN28OSvd5eIkLjxe8WN8f6g/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Лист1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZNnG2aXaVap_eAYCbRZZxN28OSvd5eIkLjxe8WN8f6g/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Дата получения": "= {{ $json.date }}",
+            "ID лида": "= {{ $json.leadId }}",
+            "Ответственный": "={{ $json.responsible }}",
+            "Ссылка на лид": "={{ $json.link }}",
+            "Тема письма": "={{ $json.subject }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Дата получения",
+              "displayName": "Дата получения",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID лида",
+              "displayName": "ID лида",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Ответственный",
+              "displayName": "Ответственный",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Ссылка на лид",
+              "displayName": "Ссылка на лид",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Тема письма",
+              "displayName": "Тема письма",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1712,
+        -96
+      ],
+      "id": "ad70f181-fbfc-4060-97cb-36963eab1abc",
+      "name": "Google таблица",
+      "credentials": {
+        "googleApi": {
+          "id": "ylfHw6Frbhy82K2h",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const subject = $json.subject || '';\nconst text = $json.text || '';\n\n// Пытаемся вытащить время из темы или текста\n// Примеры: \"сегодня, 15:00 — 16:00\", \"15:00-16:00\" и т.д.\n\nlet dateFrom = new Date();\nlet dateTo = new Date(dateFrom.getTime() + 60 * 60 * 1000); // +1 час по умолчанию\n\nconst timeMatch = (subject + ' ' + text).match(/(\\d{1,2}):(\\d{2})\\s*[—–-]\\s*(\\d{1,2}):(\\d{2})/);\n\nif (timeMatch) {\n  const today = new Date();\n  dateFrom = new Date(today.getFullYear(), today.getMonth(), today.getDate(), \n                      parseInt(timeMatch[1]), parseInt(timeMatch[2]));\n  dateTo = new Date(today.getFullYear(), today.getMonth(), today.getDate(), \n                    parseInt(timeMatch[3]), parseInt(timeMatch[4]));\n}\n\n// Формат для Bitrix24 (ISO)\nconst fromStr = dateFrom.toISOString().slice(0, 19);\nconst toStr = dateTo.toISOString().slice(0, 19);\n\nreturn {\n  json: {\n    name: (subject || 'Событие из почты').replace(/\"/g, \"'\").substring(0, 100),\n    dateFrom: fromStr,\n    dateTo: toStr,\n    description: (text || '').replace(/\"/g, \"'\").replace(/\\n/g, ' ').substring(0, 400)\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        272
+      ],
+      "id": "a096c4d5-63b6-48d6-85ee-d1816c34fe39",
+      "name": "Анализ события Календаря"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://summa-plus.bitrix24.ru/rest/38/8j3i2lbm5su5o4eu/calendar.event.add",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"type\": \"user\",\n  \"ownerId\": 38,\n  \"name\": \"{{ $json.name }}\",\n  \"from\": \"{{ $json.dateFrom }}\",\n  \"to\": \"{{ $json.dateTo }}\",\n  \"description\": \"{{ $json.description }}\",\n  \"skip_time\": \"N\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1728,
+        272
+      ],
+      "id": "8b2e7d9a-78dc-4902-9eda-3212d7a714c6",
+      "name": "Календарь в Bitrix24"
+    },
+    {
+      "parameters": {
+        "chatId": "1063571885",
+        "text": "=⚠️ ВНИМАНИЕ от руководителя!  От: {{ $json.fromName }} <{{ $json.fromEmail }}> Тема: {{ $json.subject }} Дата: {{ $json.date }}  {{ ($json.text || '').substring(0, 1200) }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1712,
+        -288
+      ],
+      "id": "911ff10c-58bf-4884-906a-eb0bd9418a4e",
+      "name": "Telegram ВНИМАНИЕ",
+      "webhookId": "a11b6d4f-bc22-4ae0-85e3-c258f36ad13d",
+      "credentials": {
+        "telegramApi": {
+          "id": "yQqzBOGKWT2VFIUk",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "1063571885",
+        "text": "=📩 Новое письмо  От: {{ $json.fromName }} <{{ $json.fromEmail }}> Тема: {{ $json.subject }} Дата: {{ $json.date }}  {{ ($json.text || '').substring(0, 1000) }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1712,
+        96
+      ],
+      "id": "085724e4-a76d-4b04-8887-602f8d2af459",
+      "name": "Telegram",
+      "webhookId": "54f35f1f-f560-44fb-bbaa-9cab7790831e",
+      "credentials": {
+        "telegramApi": {
+          "id": "yQqzBOGKWT2VFIUk",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Email Trigger (IMAP)": {
+      "main": [
+        [
+          {
+            "node": "Set",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set": {
+      "main": [
+        [
+          {
+            "node": "IF - Руководители",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Руководители": {
+      "main": [
+        [
+          {
+            "node": "Telegram ВНИМАНИЕ",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF - Новый Лид в CRM!",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Коллеги": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF - Mail.ru Календарь",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Новый Лид в CRM!": {
+      "main": [
+        [
+          {
+            "node": "Извлечение данных из Лида",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF - Коллеги",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Mail.ru Календарь": {
+      "main": [
+        [
+          {
+            "node": "Анализ события Календаря",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Prompt": {
+      "main": [
+        [
+          {
+            "node": "Mistral AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral AI": {
+      "main": [
+        [
+          {
+            "node": "IF - Результат Mistral",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Результат Mistral": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Извлечение данных из Лида": {
+      "main": [
+        [
+          {
+            "node": "Google таблица",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Анализ события Календаря": {
+      "main": [
+        [
+          {
+            "node": "Календарь в Bitrix24",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "952d7ec9-372d-40e9-b9c2-7fad55a3f542",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1e3a5fde7a39c3df5f932e2fb5d7254c6a8cc863b9372a31589e7eaef7ae5c32"
+  },
+  "id": "K1CClrmeIPLOK7vx",
+  "tags": []
+}
