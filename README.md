@@ -14,6 +14,7 @@
 | **🌤 weather-app** | Приложение для получения текущей погоды по названию города. | Python, Requests, Open-Meteo API, Geocoding API |
 | **📞 corporate-widget-smart-cross-sell** | Автономный десктоп-виджет: при входящем звонке мгновенно показывает менеджеру просадку ассортимента («красные ячейки») на основе аналитики 1С. | n8n, FastAPI + WebSockets, Python, PyQt6 | 
 | **🔗 dependent-fields** | Автоматическое управление зависимыми полями в карточке CRM (показ/очистка «Пармезан» в зависимости от «Товарных групп»). | n8n, JavaScript, Bitrix24 REST API |
+| **mail-sorter** | Классификация и маршрутизация входящей почты VK WorkMail (руководители, коллеги, новые лиды, календарь, spam/unknown). | n8n, Mistral AI, Telegram, Google Sheets, Bitrix24 REST API, IMAP |
 
 ---
 
@@ -77,4 +78,10 @@
  2. настройте исходящий вебхук CRM на событие обновления компании и credentials,
  3. Активируйте воркфлоу.
 
+### 7. Классификатор корпоративной почты ( `mail-sorter` )
+Сценарий n8n, который автоматически разбирает входящие письма VK WorkMail с помощью LLM (Mistral AI) 
+Письма от руководителей и коллег сразу уходят в Telegram, уведомление о Новом Лиде в CRM записывается в Google Sheets, уведомления календаря создают события в Bitrix24, а остальное классифицируется LLM (Mistral AI) на spam / unknown.
+
+* **Как запустить:**  
+Импортируйте `mail-sorter.json` в n8n, настройте credentials (IMAP, Telegram, Google Service Account, Mistral AI, Bitrix24 webhook) и активируйте воркфлоу.
 ---
