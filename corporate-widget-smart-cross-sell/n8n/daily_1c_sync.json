@@ -1,0 +1,119 @@
+{
+  "name": "Corporate Widget: Daily 1C Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "mailbox": "1С",
+        "format": "resolved",
+        "options": {
+          "customEmailConfig": "[[\"SUBJECT\", \"Объемы по месяцам\"]]"
+        }
+      },
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        -48
+      ],
+      "id": "42550b8e-8bbc-440c-9d0e-f2b3e665ee8d",
+      "name": "Email Trigger (IMAP)",
+      "credentials": {
+        "imap": {
+          "id": "3N8caDIbuOwVIzZR",
+          "name": "IMAP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "file_0",
+        "options": {
+          "headerRow": false
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        400,
+        -48
+      ],
+      "id": "f851e2da-e345-42ef-9ebb-d7483f2562ff",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "binaryPropertyName": "attachment_0"
+      },
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [
+        144,
+        -48
+      ],
+      "id": "ea176ce7-c836-4bf3-a972-d044fef5e0f4",
+      "name": "Compression"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nlet currentManager = '';\nlet currentClient = '';\nlet targetCache = {};\n\nlet currentMonthIdx = -1;\nlet pastMonthsIdxs = [];\n\n// 1. ДИНАМИЧЕСКИЙ ПОИСК СТОЛБЦОВ С МЕСЯЦАМИ\nfor (const item of items) {\n    const row = item.json.row || item.json;\n    if (!row || !Array.isArray(row)) continue;\n\n    let monthCols = [];\n    for (let i = 1; i < row.length; i++) {\n        const val = row[i] ? row[i].toString() : '';\n        if (val && !val.includes(\"Вес\") && !val.includes(\"Валовая\") && !isNaN(parseFloat(val))) {\n            monthCols.push(i);\n        }\n    }\n    \n    if (monthCols.length >= 4) {\n        currentMonthIdx = monthCols[monthCols.length - 1]; \n        pastMonthsIdxs = monthCols.slice(monthCols.length - 4, monthCols.length - 1); \n        break; \n    }\n}\n\n// 2. СБОР ДЕРЕВА И РАСЧЕТ КРАСНЫХ ЯЧЕЕК\nfor (const item of items) {\n    const row = item.json.row || item.json;\n    if (!row || !Array.isArray(row)) continue;\n    \n    const cellA = row ? row.toString().trim() : '';\n    if (!cellA) continue;\n    \n    if (cellA.includes(\"Валовая прибыль\") || cellA.includes(\"Вес (нетто)\")) continue;\n\n    // Идентификация Менеджера\n    if (!cellA.includes(\"ООО\") && !cellA.includes(\"ИП\") && !cellA.includes(\"АО\") && cellA.split(' ').length <= 4) {\n        currentManager = cellA;\n        if (!targetCache[currentManager]) targetCache[currentManager] = {};\n        continue;\n    }\n    \n    // Идентификация Клиента\n    if (cellA.includes(\"ООО\") || cellA.includes(\"ИП\") || cellA.includes(\"АО\")) {\n        currentClient = cellA;\n        if (currentManager && !targetCache[currentManager][currentClient]) {\n            targetCache[currentManager][currentClient] = [];\n        }\n        continue;\n    }\n    \n    // Идентификация Товара и расчет просадки\n    if (currentManager && currentClient && pastMonthsIdxs.length > 0) {\n        const hasPastSales = pastMonthsIdxs.some(idx => row[idx] !== null && row[idx] !== undefined && row[idx] !== '');\n        const currentVal = row[currentMonthIdx];\n        const noCurrentSales = (currentVal === null || currentVal === undefined || currentVal === '' || Number(currentVal) === 0);\n        \n        if (hasPastSales && noCurrentSales) {\n            // Инициализируем массив, если его не существовало, для защиты от падения\n            if (!targetCache[currentManager]) targetCache[currentManager] = {};\n            if (!targetCache[currentManager][currentClient]) targetCache[currentManager][currentClient] = [];\n            \n            targetCache[currentManager][currentClient].push({\n                productName: cellA,\n                reason: \"Просадка ассортимента\"\n            });\n        }\n    }\n}\n\n// 3. ЗАПИСЬ В СТАТИЧЕСКУЮ ПАМЯТЬ WIDGET\nconst staticData = $getWorkflowStaticData('global');\nstaticData.matrix1C = targetCache;\n\nreturn [{ \n    json: { \n        status: \"success\", \n        processedRows: items.length,\n        detectedCurrentMonthColumn: currentMonthIdx,\n        detectedPastMonthsColumns: pastMonthsIdxs,\n        cachedManagersCount: Object.keys(targetCache).length\n    } \n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        -48
+      ],
+      "id": "6b4fa3f5-057a-4ad8-aca9-d70ae467411a",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Email Trigger (IMAP)": {
+      "main": [
+        [
+          {
+            "node": "Compression",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compression": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "25964952-26ec-4cc7-a7d1-fd5165902bd8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1e3a5fde7a39c3df5f932e2fb5d7254c6a8cc863b9372a31589e7eaef7ae5c32"
+  },
+  "id": "xVlLiB1PLzBKIwrN",
+  "tags": []
+}

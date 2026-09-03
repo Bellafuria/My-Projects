@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.exe
+build/
+dist/
+widget/config.json
+backend/nohup.out

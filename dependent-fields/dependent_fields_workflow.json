@@ -1,0 +1,222 @@
+{
+  "name": "Dependent fields",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "b24-company-update",
+        "options": {}
+      },
+      "id": "a9bd51aa-f558-40e9-9880-49b3a940b2f8",
+      "name": "Webhook (Trigger)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -976,
+        80
+      ],
+      "webhookId": "YOUS WEBHOOK ID"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://bitrix24.ru/crm.company.get",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"id\": \"{{ $json.body['data[FIELDS][ID]'] }}\"\n}\n",
+        "options": {}
+      },
+      "id": "dc5c6f7d-921b-4f34-b7a2-39646b2efc60",
+      "name": "crm.company.get",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -752,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://bitrix24.ru/crm.company.update",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"id\": \"{{ $node['crm.company.get'].json.result['ID'] }}\",\n  \"fields\": {\n    \"UF_CRM_XXXXXXXXXXXXX\": \"000\"\n  }\n}",
+        "options": {}
+      },
+      "id": "2fff445b-1cd3-4a71-9951-638f88e31ccf",
+      "name": "Записать «Заполнить»",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -48,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://bitrix24.ru/crm.company.update",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"id\": \"{{ $node['crm.company.get'].json.result['ID'] }}\",\n  \"fields\": {\n    \"UF_CRM_XXXXXXXXXXXXX\": \"\"\n  }\n}",
+        "options": {}
+      },
+      "id": "a0562a16-d828-4000-ad49-619e7b45b90d",
+      "name": "Очистить поле",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -48,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const companyData = $('crm.company.get').first().json.result;\n\nconst groups = companyData[\"UF_CRM_XXXXXXXXXXXXX\"] || [];\nconst parmesanValue = companyData[\"UF_CRM_XXXXXXXXXXXXX\"];\n\nconst hasCheese = groups.map(String).includes(\"216\");\nconst isParmesanEmpty = parmesanValue === null || parmesanValue === undefined || parmesanValue === \"\";\n\nlet resultAction = \"stop\"; // По умолчанию — стоп\n\nif (hasCheese && isParmesanEmpty) {\n    resultAction = \"write\";\n} else if (!hasCheese && !isParmesanEmpty) {\n    resultAction = \"clear\";\n}\n\nreturn {\n  action: resultAction\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -544,
+        80
+      ],
+      "id": "7092bb59-7d8e-4b03-818b-5561094282ae",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "write",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "1323753e-f01f-4d7f-933f-4bd229401f42"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "0"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "103f895a-9f33-4c45-9e9e-a40b710ab73b",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "clear",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -336,
+        80
+      ],
+      "id": "f9240b58-0971-4698-8107-553f0a09cc31",
+      "name": "Switch"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook (Trigger)": {
+      "main": [
+        [
+          {
+            "node": "crm.company.get",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "crm.company.get": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Записать «Заполнить»",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Очистить поле",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "00000000-0000-0000-0000-000000000000",
+  "meta": {
+    "instanceId": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "id": "l899pq9uFa07xeR0",
+  "tags": []
+}
