@@ -1,0 +1,147 @@
+{
+  "name": "Connect Contact&Company",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "your-webhook-id",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c218ad44-f17e-4e32-849c-7854076f4c73",
+      "name": "Webhook",
+      "webhookId": "your-webhook-id"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://bitrix24.ru/crm.lead.get",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"id\": \"{{ $node['Webhook'].json.query.lead_id.replaceAll('L_', '') }}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "b3226f03-1b0a-4961-8e91-252128ee1fa4",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://bitrix24.ru/crm.company.list",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"filter\": {\n    \"TITLE\": \"{{ $node['Webhook'].json.query.lead_title }}\"\n  },\n  \"select\": [ \"ID\" ]\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        624,
+        0
+      ],
+      "id": "0b7e9154-f2e2-4c92-85be-d7b00fac5218",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "60b79115-1406-4f1f-96a8-aebc2ab9c086",
+      "name": "Wait",
+      "webhookId": "your-webhook-id"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://bitrix24.ru/crm.company.contact.add",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"id\": \"{{ $node['HTTP Request1'].json['result'][0]['ID'] }}\",\n  \"fields\": {\n    \"CONTACT_ID\": \"{{ $node['HTTP Request'].json['result']['CONTACT_ID'] }}\",\n    \"IS_PRIMARY\": \"Y\"\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        832,
+        0
+      ],
+      "id": "232a50fb-892a-4d9d-b015-314c02bcf3d8",
+      "name": "HTTP Request2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "548c9ac7-fb31-4d77-96aa-eea8024deab5",
+  "meta": {
+    "instanceId": "1e3a5fde7a39c3df5f932e2fb5d7254c6a8cc863b9372a31589e7eaef7ae5c32"
+  },
+  "id": "JYyg5BYbKBeL7XV4",
+  "tags": []
+}

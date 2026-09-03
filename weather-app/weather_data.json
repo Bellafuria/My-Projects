@@ -1,0 +1,19 @@
+{
+    "latitude": 67.58475,
+    "longitude": 33.408737,
+    "generationtime_ms": 0.030040740966796875,
+    "utc_offset_seconds": 10800,
+    "timezone": "Europe/Moscow",
+    "timezone_abbreviation": "GMT+3",
+    "elevation": 176.0,
+    "current_units": {
+        "time": "iso8601",
+        "interval": "seconds",
+        "temperature_2m": "°C"
+    },
+    "current": {
+        "time": "2026-05-04T20:30",
+        "interval": 900,
+        "temperature_2m": 4.9
+    }
+}
