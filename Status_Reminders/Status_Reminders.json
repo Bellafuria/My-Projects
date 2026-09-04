@@ -1,0 +1,125 @@
+{
+  "name": "Status_Reminders",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 12
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "cb82753a-58b6-4778-96a9-168efaae8093",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.item.json.result.map(user => {\n  return { json: { ID: user.ID } };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "8f7f97e9-0824-4422-b903-7799c078a660",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://bitrix24.ru/user.get.json",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"FILTER\": {\n    \"ACTIVE\": \"Y\",\n    \"UF_DEPARTMENT\": [VALUE]\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "a9e7e68f-ad42-4e03-b1d2-a04d6392bd9f",
+      "name": "HTTP Request_user.get.json"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://bitrix24.ru/im.message.add.json",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"DIALOG_ID\": \"{{ $json.ID }}\",\n  \"MESSAGE\": \"Время проверить статус в заказах клиента, поставить статус \\\"к обеспечению\\\"\",\n  \"SYSTEM\": \"Y\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        624,
+        0
+      ],
+      "id": "13a754cf-c783-405a-8ff2-0bccc6ad062b",
+      "name": "HTTP Request_im.message.add.json"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request_user.get.json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request_im.message.add.json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request_user.get.json": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request_im.message.add.json": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "51978f81-33a9-45f0-831f-985f74ccd2f9",
+  "meta": {
+    "instanceId": "1e3a5fde7a39c3df5f932e2fb5d7254c6a8cc863b9372a31589e7eaef7ae5c32"
+  },
+  "id": "pCClGivsqeStJgMl",
+  "tags": []
+}
