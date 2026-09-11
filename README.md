@@ -14,7 +14,9 @@
 | **🌤 weather-app** | Приложение для получения текущей погоды по названию города. | Python, Requests, Open-Meteo API, Geocoding API |
 | **📞 corporate-widget-smart-cross-sell** | Автономный десктоп-виджет: при входящем звонке мгновенно показывает менеджеру просадку ассортимента («красные ячейки») на основе аналитики 1С. | n8n, FastAPI + WebSockets, Python, PyQt6 | 
 | **🔗 dependent-fields** | Автоматическое управление зависимыми полями в карточке CRM (показ/очистка «Пармезан» в зависимости от «Товарных групп»). | n8n, JavaScript, Bitrix24 REST API |
-| **mail-sorter** | Классификация и маршрутизация входящей почты VK WorkMail (руководители, коллеги, новые лиды, календарь, spam/unknown). | n8n, Mistral AI, Telegram, Google Sheets, Bitrix24 REST API, IMAP |
+| **🔗 mail-sorter** | Классификация и маршрутизация входящей почты VK WorkMail (руководители, коллеги, новые лиды, календарь, spam/unknown). | n8n, Mistral AI, Telegram, Google Sheets, Bitrix24 REST API, IMAP |
+| **🔗 Status Reminders** | Система ежедневных уведомлений сотрудников в обход лимитов тарифа CRM. | n8n, Bitrix24 REST API, JavaScript, JSON |
+| **🛠 Error Handler** | Глобальный централизованный обработчик и роутер ошибок для сценариев n8n. | n8n, SMTP, HTML, JSON |
 
 ---
 
@@ -84,4 +86,14 @@
 
 * **Как запустить:**  
 Импортируйте `mail-sorter.json` в n8n, настройте credentials (IMAP, Telegram, Google Service Account, Mistral AI, Bitrix24 webhook) и активируйте воркфлоу.
+
+### 8. Система ежедневных уведомлений ( `Status_Reminders` )
+Автоматическое информирование сотрудников в CRM в обход лимитов тарифа с помощью расписания, обработки через JavaScript и персональных уведомлений. 
+
+* **Как запустить:** Импортируйте `Status_Reminders.json` в n8n и настройте вебхук.
+
+### 9. Глобальный обработчик ошибок ( `Error Handler` )
+Централизованная система перехвата сбоев в n8n, отправляющая HTML-уведомления на email с деталями ошибки.
+
+* **Как запустить:** Импортируйте `Error Handler.json` в n8n и настройте SMTP.
 ---
