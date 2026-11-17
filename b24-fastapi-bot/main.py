@@ -9,20 +9,46 @@ app = FastAPI()
 
 # НАСТРОЙКИ ПОЧТЫ (VK WorkSpace / Mail.ru)
 SMTP_SERVER = "smtp.mail.ru"
-SMTP_PORT = 587  # Использование STARTTLS для обхода блокировок портов хостинга
+SMTP_PORT = 587
 
-# Защита данных: берем доступы из переменных окружения сервера, либо используем заглушки
-SMTP_USER = os.getenv("SMTP_USER", "your_login@domain.com")  
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "your_secure_app_password")  
+# Защита данных: берем доступы из переменных окружения сервера
+SMTP_USER = os.getenv("SMTP_USER", "your_login@domain.com")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "your_secure_app_password")
 
 # СПИСОК ПОЛУЧАТЕЛЕЙ УВЕДОМЛЕНИЙ
 RECIPIENTS = [
     "manager1@domain.com",
-    "manager2@domain.com"
+    "manager2@domain.com",
+    "manager3@domain.com"
 ]
 
 # ССЫЛКА НА ВХОДЯЩИЙ ВЕБХУК БИТРИКС24
-B24_WEBHOOK_URL = os.getenv("B24_WEBHOOK_URL", "https://bitrix24.ru")
+B24_WEBHOOK_URL = os.getenv("B24_WEBHOOK_URL", "https://your-domain.bitrix24.ru/rest/1/your_webhook_key/")
+
+# ID менеджеров (пример)
+manager1_ID = N
+manager2_ID = N
+manager3_ID = N
+
+# Простой счётчик в памяти
+buy_counter = 0
+
+def get_next_buy_assignee():
+    global buy_counter
+    buy_counter += 1
+    return manager1_ID if buy_counter % 2 == 1 else manager2_ID
+
+def update_lead_assignee(lead_id: str, user_id: int):
+    """Обновляет ответственного в лиде"""
+    url = f"{B24_WEBHOOK_URL}crm.lead.update.json"
+    try:
+        requests.post(url, json={
+            "id": lead_id,
+            "fields": {"ASSIGNED_BY_ID": user_id}
+        }, timeout=10)
+        print(f"Лид {lead_id} назначен на пользователя {user_id}")
+    except Exception as e:
+        print(f"Ошибка обновления ответственного: {e}")
 
 def get_lead_info(lead_id: str):
     """Запрос детальной информации о лиде из Битрикс24 REST API"""
@@ -53,13 +79,14 @@ def get_user_name(user_id: str):
         print(f"Ошибка запроса имени пользователя: {e}")
     return f"ID {user_id}"
 
-def send_email_notification(lead_id: str, lead_title: str, source_id: str, responsible_person: str):
+def send_email_notification(lead_id: str, lead_title: str, source_id: str, responsible_person: str, assigned_to_name: str = ""):
     """Формирование и отправка HTML-письма через SMTP-сервер"""
-    # Динамическое формирование ссылки на лид в CRM
-    crm_domain = B24_WEBHOOK_URL.split("/rest/")[0]  # Автоматически вырезает домен Битрикс24
+    crm_domain = B24_WEBHOOK_URL.split("/rest/")[0]
     lead_url = f"{crm_domain}/crm/lead/details/{lead_id}/"
     
-    subject = f"🔥 Новый Лид в CRM! ID: {lead_id}"
+    subject = f"Новый Лид в CRM! ID: {lead_id}"
+    
+    assignment_note = f"<p><b>Назначен на:</b> {assigned_to_name}</p>" if assigned_to_name else ""
     
     html_content = f"""
     <html>
@@ -68,6 +95,7 @@ def send_email_notification(lead_id: str, lead_title: str, source_id: str, respo
             <p><b>Название лида:</b> {lead_title}</p>
             <p><b>Источник:</b> {source_id}</p>
             <p><b>Ответственный:</b> {responsible_person}</p>
+            {assignment_note}
             <p><b>Ссылка в CRM:</b> <a href="{lead_url}">{lead_url}</a></p>
         </body>
     </html>
@@ -86,7 +114,7 @@ def send_email_notification(lead_id: str, lead_title: str, source_id: str, respo
                 msg["From"] = SMTP_USER
                 msg["To"] = recipient
                 msg.attach(MIMEText(html_content, "html", "utf-8"))
-                
+
                 server.sendmail(SMTP_USER, recipient, msg.as_string())
                 print(f"Письмо успешно отправлено на {recipient}")
     except Exception as e:
@@ -107,14 +135,37 @@ async def bitrix_webhook(request: Request, background_tasks: BackgroundTasks):
             lead_title = lead_data.get("TITLE", "Без названия")
             source_id = lead_data.get("SOURCE_ID", "Не указан")
             
-            # Извлекаем ID ответственного и запрашиваем его текстовое имя
-            user_id = lead_data.get("ASSIGNED_BY_ID")
-            responsible_person = get_user_name(user_id)
+            # Читаем поле "Вы хотите"
+            want_value = lead_data.get("ID_CRM_field", "")
+
+            assignee_id = None
+            assigned_to_name = ""
+
+            if want_value == "VALUE1":
+                assignee_id = manager3_ID
+                assigned_to_name = "manager3"
+            elif want_value == "VALUE2":
+                assignee_id = get_next_buy_assignee()
+                assigned_to_name = "manager1" if assignee_id == manager1_ID else "manager2"
+
+            # Обновляем ответственного в лиде
+            if assignee_id:
+                update_lead_assignee(lead_id, assignee_id)
+                responsible_person = get_user_name(str(assignee_id))
+            else:
+                user_id = lead_data.get("ASSIGNED_BY_ID")
+                responsible_person = get_user_name(user_id)
             
-            # Фильтр источника: обрабатываем только заявки с Веб-сайта (код "WEB")
+            # Фильтр источника: обрабатываем только заявки с Веб-сайта
             if source_id in ["WEB", "Веб-сайт"]:
-                # Асинхронный запуск отправки в бэкграунде для моментального ответа серверу CRM
-                background_tasks.add_task(send_email_notification, lead_id, lead_title, source_id, responsible_person)
+                background_tasks.add_task(
+                    send_email_notification,
+                    lead_id,
+                    lead_title,
+                    source_id,
+                    responsible_person,
+                    assigned_to_name
+                )
                 return {"status": "success", "message": "Notification task scheduled"}
                 
     return {"status": "ignored"}
@@ -122,4 +173,3 @@ async def bitrix_webhook(request: Request, background_tasks: BackgroundTasks):
 @app.get("/test")
 def test_route():
     return {"status": "FastAPI integration server is online!"}
-
